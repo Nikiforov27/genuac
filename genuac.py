@@ -1,5 +1,7 @@
 import random
 import sys
+import os
+import hashlib
 
 big_consonants = ['Q', 'W', 'R', 'T', 'P', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N', 'M']
 small_consonants = ['q', 'w', 'r', 't', 'p', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'z', 'x', 'c', 'v', 'b', 'n', 'm']
@@ -8,8 +10,11 @@ small_vowels = ['a', 'e', 'y', 'u', 'i', 'o']
 numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 symbols = ['*', '#', '@', '&', '-', '+', '/', '?', '!', ':', ';', '%', '=', '~', '[', ']', '(', ')', '_', '^', '$', '[', ']']
 
-def add_record_name():
-    pass
+def add_record_file(record_name: str, record_text: str):
+    with open(record_name, 'w') as record_file:
+        record_file.write(record_text)
+
+    return "File" + record_name + "is write"
 
 def gen_name(lenght: int, args: str, int_args: int):#, use_numbers: str, un_num: int):
     
@@ -52,8 +57,12 @@ def gen_pass(lenght: int, args: str):
 
     return password
 
-def crypt_record():
-    pass
+def crypt_record(record_file):
+    with open(record_file, "r") as file:
+        encrypt = hashlib.sha512(file.read().encode())
+        encrypted_data = encrypt.hexdigest()
+
+    return encrypted_data
 
 def main():
     
@@ -68,22 +77,21 @@ def main():
         print("For example:\n\t --gen-account b 10 smb 10")
 
 
-    elif sys.orig_argv[2] == "--gen-account":       
-        print(gen_name(int(sys.orig_argv[3]), sys.orig_argv[4], int(sys.orig_argv[5])))
-        print(gen_pass(int(sys.orig_argv[6]), sys.orig_argv[7]))
+    elif sys.orig_argv[2] == "--gen-account":
+        print("Your name: "+ gen_name(int(sys.orig_argv[3]), sys.orig_argv[4], int(sys.orig_argv[5])))
+        print("Your password: " + gen_pass(int(sys.orig_argv[6]), sys.orig_argv[7]))
 
     elif sys.orig_argv[2] == "--gen-password":
-        print(gen_pass(int(sys.orig_argv[3]), sys.orig_argv[4]))
+        print("Your password: " + gen_pass(int(sys.orig_argv[3]), sys.orig_argv[4]))
 
     elif sys.orig_argv[2] == "--gen-name":
-        print(gen_name(int(sys.orig_argv[3]), sys.orig_argv[4], int(sys.orig_argv[5])))
+        print("Your name: " + gen_name(int(sys.orig_argv[3]), sys.orig_argv[4], int(sys.orig_argv[5])))
 
 
     elif sys.orig_argv[2] == "--interactive":
 
-
         print("how lenght do you want the name?:")
-        lenght_name = int(input())
+        lenght = int(input())
 
         print("Do you want use a big letters in your name? [y or n]:")
         use_big_letters = input()
@@ -94,7 +102,6 @@ def main():
             print(use_big_letters +": ok")
         else:
             print(use_big_letters + ":Your response unsiutable")
-
 
 
         print("How lenght do you want the password?:")
@@ -140,9 +147,28 @@ def main():
             print(add_description + ": Your response unsiutable")
         
 
-        print("\nYour name: " + gen_name(lenght_name, use_big_letters, big_letters_num))
+        print("\nYour name: " + gen_name(lenght, use_big_letters, big_letters_num))
 
         args_for_password = use_symbols + use_big_letters_in_password + use_small_letters
         print("Your password: " + gen_pass(lenght_password, args_for_password))
         print("Your description:\n" + description)
+    
+
+    print("what do you call this record?:")
+    record_name = input()
+    print("Enter the absolute path for record:")
+    record_path = input()
+    os.chdir(record_path)
+    try:
+        os.mkdir("passwords")
+    except FileExistsError:
+        print("")
+    finally:
+        os.chdir("passwords")
+        record_text = "name: " + gen_name(lenght, use_big_letters, big_letters_num) + "\npassword: " + gen_pass(lenght_password, args_for_password) + "\ndescription: " + description
+        add_record_file(record_name, record_text)
+        with open("incryped_"+record_name, "w") as file:
+            file.write(crypt_record(record_name))
+        os.remove(record_name)
+
 main()
